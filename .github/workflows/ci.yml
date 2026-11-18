@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npx eslint . --max-warnings=0
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit and component tests (fails under 90% coverage)
+        run: npm run test:coverage
+
+      - name: Safety eval (keyword screen, no API key)
+        run: npm run eval
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Production dependencies must be clean. Dev tooling is reported but doesn't fail
+      # the build: see SECURITY.md for the one known, unfixable dev-only advisory.
+      - name: Production dependencies
+        run: npm audit --omit=dev --audit-level=moderate
+      - name: All dependencies (report only)
+        run: npm audit || true

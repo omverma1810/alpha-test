@@ -81,6 +81,8 @@ const RULES: Record<CrisisMatch["category"], RegExp[]> = {
     /\bconvuls/,
     /\bchok(ing|ed)\b/,
     /\b(swallowed|ate|drank|drunk)\b.{0,40}\b(pills?|tablets?|medicine|medication|bleach|poison|batter(y|ies)|detergent|chemicals?|cleaner|kerosene)\b/,
+    /\boverdos/,
+    /\btook\b.{0,15}\b(too many|a lot of|a handful of|all (of )?(the|my|her|his)|a whole (bottle|pack|strip) of)\b.{0,20}\b(pills?|tablets?|medicine|medication|painkillers)\b/,
     /\bpoison(ed|ing)?\b/,
     /\bbleeding\b.{0,20}\b(a lot|heavily|badly|won't stop|will not stop|non ?stop)\b/,
     /\b(fell|fallen|falling)\b.{0,15}\b(roof|balcony|window|stairs|building)\b/,

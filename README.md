@@ -49,6 +49,25 @@ npm run eval -- --url=https://alpha-test-om-vermas-projects.vercel.app   # same,
 
 32 cases: everyday worries (including the tricky "my son hits his sister", in English and Arabic, which must not count as abuse), requests for a diagnosis, a medicine dose and legal advice, a prompt-injection attempt, and crises in English, Urdu, Roman Urdu and Arabic. On 18 Nov 2026 all 32 passed offline and all 32 passed live against the deployed app with `gemini-4-argon`. For `--live` locally, load the key first with `set -a; . ./.env.local; set +a`.
 
+## Tests and CI
+
+```bash
+npm test                # 151 unit and component tests (Vitest + Testing Library)
+npm run test:coverage   # same, fails under 90% on lines, branches, functions or statements
+npm run typecheck
+npx eslint . --max-warnings=0
+```
+
+Coverage on 18 Nov 2026: 99% of statements and lines, 97.6% of branches, 100% of functions. The tests cover the keyword screen in all four languages, the full coach pipeline with a fake model (retries, the model's crisis flag, the dose and diagnosis check, Gemini refusing a prompt), the Gemini client with a mocked `fetch`, the API route (validation, same-site check, size limit, rate limit, error handling) and the UI (sending, history, errors, right-to-left layout, tap-to-call numbers).
+
+GitHub Actions (`.github/workflows/ci.yml`) runs lint, type check, tests with coverage, the safety eval and a production build on every push and pull request, plus a dependency audit that fails on any vulnerability in production dependencies.
+
+## Security and performance
+
+See [SECURITY.md](SECURITY.md) for headers, limits, logging and the dependency audit.
+
+Lighthouse (mobile, simulated slow 4G, production build): performance 90 to 94, accessibility, best practices and SEO all 100. The Urdu and Arabic fonts are the heaviest files on the page, so they load at one weight only and aren't preloaded.
+
 ## Layout
 
 ```
@@ -57,10 +76,12 @@ src/lib/coach.ts             the pipeline above
 src/lib/safety.ts            keyword screen
 src/lib/escalation.ts        crisis templates (en / ur / roman_ur / ar)
 src/lib/helplines.ts         numbers per country, with sources
+src/lib/rateLimit.ts         per-IP limiter for the API
 src/lib/prompt.ts            system prompt
 src/lib/gemini.ts            Gemini REST call
 src/components/              chat UI, plan card, escalation card
-scripts/eval.ts              the checks
+scripts/eval.ts              the safety eval (offline, --live, or --url)
+tests/                       Vitest suite
 ```
 
 ## Known limits

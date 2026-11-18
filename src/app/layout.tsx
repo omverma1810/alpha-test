@@ -3,10 +3,12 @@ import { Atkinson_Hyperlegible_Next, Bricolage_Grotesque, Noto_Naskh_Arabic, Not
 import "./globals.css";
 
 // Bricolage for the few places that carry the voice; Atkinson for everything a tired parent reads.
-const display = Bricolage_Grotesque({ variable: "--font-display", subsets: ["latin"], weight: ["500", "700"] });
+const display = Bricolage_Grotesque({ variable: "--font-display", subsets: ["latin"], weight: ["700"] });
 const body = Atkinson_Hyperlegible_Next({ variable: "--font-body", subsets: ["latin"], weight: ["400", "600"] });
-const urdu = Noto_Nastaliq_Urdu({ variable: "--font-urdu", subsets: ["arabic"], weight: ["400", "600"] });
-const arabic = Noto_Naskh_Arabic({ variable: "--font-arabic", subsets: ["arabic"], weight: ["400", "600"] });
+// Urdu and Arabic faces are large and most visitors write in English, so they are
+// not preloaded: the browser fetches them only when that script appears on screen.
+const urdu = Noto_Nastaliq_Urdu({ variable: "--font-urdu", subsets: ["arabic"], weight: ["400"], preload: false });
+const arabic = Noto_Naskh_Arabic({ variable: "--font-arabic", subsets: ["arabic"], weight: ["400"], preload: false });
 
 export const metadata: Metadata = {
   title: "Alpha Kids parenting coach",
