@@ -23,6 +23,13 @@ async function viaHttp(baseUrl: string, message: string): Promise<CoachReply> {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ message, history: [], region: "ae" }),
   });
+  // The API allows 20 messages per 5 minutes per IP; wait it out rather than fail.
+  if (res.status === 429) {
+    const wait = Number(res.headers.get("retry-after") ?? 60);
+    console.log(`      (rate limited, waiting ${wait}s)`);
+    await new Promise((r) => setTimeout(r, (wait + 1) * 1000));
+    return viaHttp(baseUrl, message);
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(`${res.status}: ${data.error}`);
   return data.reply;
