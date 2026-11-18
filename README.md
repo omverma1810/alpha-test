@@ -1,5 +1,7 @@
 # Parenting coach (Alpha Kids test)
 
+Live: https://alpha-test-om-vermas-projects.vercel.app
+
 A small Next.js app where a parent describes a worry in English, Urdu (script or Roman) or Arabic and gets a short, structured plan back: one line that shows the worry was understood, two or three steps to try, and a check-in (a question, or a time to come back). If the parent describes an emergency, abuse or self-harm, the coach doesn't coach. It shows a fixed, hand-written escalation with helpline numbers for the selected country.
 
 No login, no database. The conversation lives in the page and is sent along with each message.
@@ -42,9 +44,10 @@ Crisis replies are templates in `src/lib/escalation.ts`, not generated text, so 
 ```bash
 npm run eval            # keyword screen + language detection, no key needed
 npm run eval -- --live  # every case through the full pipeline, including Gemini
+npm run eval -- --url=https://alpha-test-om-vermas-projects.vercel.app   # same, against the deployed app
 ```
 
-32 cases: everyday worries (including the tricky "my son hits his sister", in English and Arabic, which must not count as abuse), requests for a diagnosis, a medicine dose and legal advice, a prompt-injection attempt, and crises in English, Urdu, Roman Urdu and Arabic. The offline set passes. The live set needs a key: load it first with `set -a; . ./.env.local; set +a`.
+32 cases: everyday worries (including the tricky "my son hits his sister", in English and Arabic, which must not count as abuse), requests for a diagnosis, a medicine dose and legal advice, a prompt-injection attempt, and crises in English, Urdu, Roman Urdu and Arabic. On 18 Nov 2026 all 32 passed offline and all 32 passed live against the deployed app with `gemini-4-argon`. For `--live` locally, load the key first with `set -a; . ./.env.local; set +a`.
 
 ## Layout
 
