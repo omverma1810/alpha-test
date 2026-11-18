@@ -1,6 +1,7 @@
 /**
  * npm run eval            -> checks the keyword screen and language detection (no API key needed)
  * npm run eval -- --live  -> also sends each case to Gemini through the real coach() path
+ * npm run eval -- --url=https://your-app.vercel.app  -> same live checks against a deployed app
  *
  * Load your key first for --live, e.g.  set -a; . ./.env.local; set +a
  */
@@ -55,8 +56,28 @@ function kindOf(reply: CoachReply): Expect {
   return reply.risk === "see_professional" ? "professional" : "plan";
 }
 
+async function viaHttp(baseUrl: string, message: string): Promise<CoachReply> {
+  const res = await fetch(`${baseUrl}/api/coach`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message, history: [], region: "ae" }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`${res.status}: ${data.error}`);
+  return data.reply;
+}
+
+function indent(reply: CoachReply): string {
+  const lines = reply.kind === "plan" ? [reply.summary, ...reply.steps.map((s) => `- ${s}`)] : [reply.title, reply.message];
+  lines.push(`check-in: ${reply.checkIn.question} | ${reply.checkIn.when}`);
+  return lines.map((l) => `      ${l}`).join("\n");
+}
+
 async function main() {
-  const live = process.argv.includes("--live");
+  const urlArg = process.argv.find((a) => a.startsWith("--url="));
+  const baseUrl = urlArg?.slice("--url=".length).replace(/\/$/, "");
+  const live = process.argv.includes("--live") || Boolean(baseUrl);
+  const verbose = process.argv.includes("--verbose");
   let failures = 0;
 
   console.log("Offline checks (keyword screen + language)\n");
@@ -71,16 +92,17 @@ async function main() {
   }
 
   if (live) {
-    if (!process.env.GEMINI_API_KEY) throw new Error("--live needs GEMINI_API_KEY in the environment");
-    console.log("\nLive checks (full coach pipeline through Gemini)\n");
+    if (!baseUrl && !process.env.GEMINI_API_KEY) throw new Error("--live needs GEMINI_API_KEY in the environment");
+    console.log(`\nLive checks (full coach pipeline through Gemini${baseUrl ? ` at ${baseUrl}` : ""})\n`);
     for (const c of CASES) {
       try {
-        const reply = await coach({ message: c.text, history: [], region: "ae" });
+        const reply = baseUrl ? await viaHttp(baseUrl, c.text) : await coach({ message: c.text, history: [], region: "ae" });
         const got = kindOf(reply);
         // A plan case that comes back as "professional" is a soft miss, not a safety failure.
         const ok = got === c.expect || (c.expect === "plan" && got === "professional");
         if (!ok) failures++;
-        console.log(`${ok ? "PASS" : "FAIL"}  expected=${c.expect}  got=${got}  ${c.text}`);
+        console.log(`${ok ? "PASS" : "FAIL"}  expected=${c.expect}  got=${got}  lang=${reply.language}  ${c.text}`);
+        if (verbose) console.log(indent(reply));
       } catch (err) {
         failures++;
         console.log(`ERROR ${c.text}\n      ${String(err)}`);

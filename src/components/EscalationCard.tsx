@@ -11,55 +11,58 @@ export default function EscalationCard({ reply }: { reply: EscalationReply }) {
       role="alert"
       dir={rtl ? "rtl" : "ltr"}
       lang={reply.language === "roman_ur" ? "ur-Latn" : reply.language}
-      className={`max-w-[92%] rounded-3xl border border-alert/25 bg-alert-soft p-5 ${font}`}
+      className={`rounded-2xl border-2 border-alert bg-alert-soft p-5 ${font}`}
     >
-      <div className="flex items-center gap-2 text-alert">
-        <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <path d="M12 3 2.5 20h19L12 3Z" strokeLinejoin="round" />
-          <path d="M12 10v4.5M12 17.5v.01" strokeLinecap="round" />
-        </svg>
-        <h2 className="font-display text-lg font-semibold">{reply.title}</h2>
-      </div>
+      <h2 className="font-display text-xl leading-tight font-bold text-alert">{reply.title}</h2>
+      <p className="mt-2 text-[15px] leading-relaxed">{reply.message}</p>
 
-      <p className="mt-2 text-[15px]">{reply.message}</p>
-
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {reply.helplines.map((h) =>
           h.number ? (
             <a
               key={h.label + h.number}
               href={`tel:${h.number.replace(/[^\d+]/g, "")}`}
-              className="flex items-center gap-2 rounded-2xl bg-alert px-4 py-2.5 text-white transition hover:brightness-110"
+              dir="ltr"
+              className="flex items-center gap-3 rounded-xl bg-alert px-4 py-3 text-white hover:bg-[#9a1d13]"
             >
-              <span className="text-lg font-bold tabular-nums" dir="ltr">
-                {h.number}
-              </span>
-              <span className="text-xs leading-tight opacity-90" dir="ltr">
-                {h.label}
-                {h.note ? <><br />{h.note}</> : null}
+              <PhoneIcon />
+              <span>
+                <span className="block font-display text-xl leading-none font-bold tabular-nums">{h.number}</span>
+                <span className="mt-1 block text-[13px] leading-tight text-white/85">
+                  {h.label}
+                  {h.note ? `, ${h.note}` : ""}
+                </span>
               </span>
             </a>
           ) : (
-            <p key={h.label} className="rounded-2xl bg-paper px-4 py-2.5 text-sm font-semibold text-alert" dir="ltr">
+            <p key={h.label} dir="ltr" className="rounded-xl border border-alert/30 bg-paper px-4 py-3 text-sm font-semibold text-alert">
               {t.call}: {h.label}
             </p>
           ),
         )}
       </div>
 
-      <ol className="mt-4 space-y-1.5 text-[15px]">
+      <ol className="mt-5 space-y-2">
         {reply.steps.map((s, i) => (
-          <li key={i} className="flex gap-2">
-            <span className="font-bold text-alert">{i + 1}.</span>
+          <li key={i} className="flex gap-3 text-[15px] leading-6">
+            <span className="font-display font-bold text-alert tabular-nums">{i + 1}</span>
             <span>{s}</span>
           </li>
         ))}
       </ol>
 
-      <p className="mt-4 border-t border-alert/15 pt-3 text-sm">
-        <span className="font-semibold">{reply.checkIn.question}</span>{" "}
-        <span className="text-muted">{reply.checkIn.when}</span>
+      <p className="mt-5 border-t border-alert/20 pt-3 text-[15px]">
+        <span className="font-semibold">{reply.checkIn.question}</span>
+        <span className="block text-sm text-muted">{reply.checkIn.when}</span>
       </p>
     </article>
+  );
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="currentColor" aria-hidden>
+      <path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z" />
+    </svg>
   );
 }

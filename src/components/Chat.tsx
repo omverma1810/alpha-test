@@ -6,6 +6,7 @@ import { isRtl, scriptClass } from "@/lib/language";
 import type { ChatTurn, CoachReply, Region } from "@/lib/types";
 import Composer from "./Composer";
 import EscalationCard from "./EscalationCard";
+import NightLight from "./NightLight";
 import PlanCard from "./PlanCard";
 
 type Message =
@@ -71,23 +72,18 @@ export default function Chat() {
   const empty = messages.length === 0;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 sm:px-6">
-      <header className="flex items-center justify-between gap-3 py-5">
-        <div className="flex items-center gap-3">
-          <Mark />
-          <div>
-            <p className="font-display text-lg leading-tight font-semibold">Parenting coach</p>
-            <p className="text-xs text-muted">
-              Alpha Kids<span className="hidden sm:inline"> · English, اردو, العربية</span>
-            </p>
-          </div>
+    <div className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 sm:px-6">
+      <header className="flex items-center justify-between gap-3 py-4">
+        <div className="flex items-center gap-2.5">
+          <NightLight className="size-8" />
+          <p className="font-display text-[17px] font-bold tracking-tight">Alpha Kids coach</p>
         </div>
-        <label className="flex items-center gap-2 text-xs text-muted">
+        <label className="flex items-center gap-2 text-sm text-muted">
           <span className="hidden sm:inline">Helplines for</span>
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value as Region)}
-            className="rounded-full border border-line bg-paper px-3 py-1.5 text-sm text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-sage/40"
+            className="rounded-lg border border-line bg-paper px-2.5 py-1.5 text-sm text-ink"
             aria-label="Country for helpline numbers"
           >
             {REGIONS.map((r) => (
@@ -99,50 +95,48 @@ export default function Chat() {
         </label>
       </header>
 
-      <main className="flex-1 pb-6">
+      <main className="flex-1 pb-8">
         {empty ? (
-          <section className="rise pt-6 sm:pt-12">
-            <h1 className="font-display text-3xl leading-snug font-medium sm:text-4xl">
-              What&apos;s going on with your little one?
+          <section className="pt-10 sm:pt-16">
+            <h1 className="font-display text-[2.5rem] leading-[1.05] font-bold tracking-tight text-indigo sm:text-[3.25rem]">
+              What&apos;s happening with your child?
             </h1>
-            <p className="mt-3 max-w-lg text-muted">
-              Tell me in a sentence or two. I&apos;ll suggest a few small things to try, and we&apos;ll check in on how
-              it went.
+            <p className="mt-4 max-w-[34rem] text-[17px] leading-relaxed text-muted">
+              Write it the way you&apos;d tell a friend, in English, اردو or العربية. You&apos;ll get two or three things
+              to try, and a time to check back in.
             </p>
-            <p className="mt-8 text-xs font-semibold tracking-wide text-muted uppercase">Or start with one of these</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+
+            <ul className="mt-10 divide-y divide-line border-y border-line" aria-label="Example worries">
               {STARTERS.map((s) => (
-                <button
-                  key={s}
-                  onClick={() => send(s)}
-                  dir="auto"
-                  className={`rounded-2xl border border-line bg-paper px-4 py-2.5 text-start text-sm transition hover:border-sage hover:bg-sage-soft ${scriptClass(s)}`}
-                >
-                  {s}
-                </button>
+                <li key={s}>
+                  <button
+                    onClick={() => send(s)}
+                    dir="auto"
+                    className={`group flex w-full items-center gap-3 py-3.5 text-start text-[15px] text-ink hover:text-indigo ${scriptClass(s)}`}
+                  >
+                    <span className="size-1.5 shrink-0 rounded-full bg-line group-hover:bg-lamp" aria-hidden />
+                    <span className="flex-1">{s}</span>
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </section>
         ) : (
-          <ol className="space-y-5 pt-2" aria-live="polite">
+          <ol className="space-y-7 pt-4" aria-live="polite">
             {messages.map((m) => (
-              <li key={m.id} className="rise">
+              <li key={m.id} className="settle">
                 {m.role === "parent" && <ParentBubble text={m.text} />}
                 {m.role === "coach" &&
                   (m.reply.kind === "plan" ? <PlanCard reply={m.reply} /> : <EscalationCard reply={m.reply} />)}
                 {m.role === "error" && (
-                  <p className="rounded-2xl border border-line bg-paper px-4 py-3 text-sm text-muted">{m.text}</p>
+                  <p className="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-muted">{m.text}</p>
                 )}
               </li>
             ))}
             {sending && (
-              <li className="flex items-center gap-2 px-1 text-sm text-muted">
-                <span className="flex gap-1" aria-hidden>
-                  <span className="dot size-1.5 rounded-full bg-sage" />
-                  <span className="dot size-1.5 rounded-full bg-sage" />
-                  <span className="dot size-1.5 rounded-full bg-sage" />
-                </span>
-                Thinking it through
+              <li className="flex items-center gap-3 text-sm text-muted">
+                <NightLight className="glow size-7" />
+                Reading what you wrote
               </li>
             )}
           </ol>
@@ -150,11 +144,11 @@ export default function Chat() {
         <div ref={bottom} />
       </main>
 
-      <div className="sticky bottom-0 bg-gradient-to-t from-cream from-70% to-transparent pt-4 pb-4">
+      <div className="sticky bottom-0 -mx-4 bg-dusk/95 px-4 pt-3 pb-4 backdrop-blur sm:-mx-6 sm:px-6">
         <Composer onSend={send} disabled={sending} />
-        <p className="mt-2 px-1 text-center text-[11px] text-muted">
-          General parenting ideas only. Not medical, legal or emergency advice. In an emergency, call your local
-          emergency number.
+        <p className="mt-2.5 text-center text-xs leading-snug text-muted">
+          General parenting ideas, not medical, legal or emergency advice. In an emergency, call your local emergency
+          number.
         </p>
       </div>
     </div>
@@ -163,28 +157,14 @@ export default function Chat() {
 
 function ParentBubble({ text }: { text: string }) {
   const rtl = isRtl(text);
-  const font = scriptClass(text);
   return (
     <div className="flex justify-end">
       <p
         dir="auto"
-        className={`max-w-[85%] rounded-3xl rounded-br-md bg-sage px-4 py-2.5 whitespace-pre-wrap text-white ${rtl ? `${font} rounded-br-3xl rounded-bl-md` : ""}`}
+        className={`max-w-[85%] rounded-2xl bg-indigo px-4 py-2.5 text-[15px] whitespace-pre-wrap text-white ${rtl ? `${scriptClass(text)} rounded-tl-sm` : "rounded-tr-sm"}`}
       >
         {text}
       </p>
     </div>
-  );
-}
-
-function Mark() {
-  return (
-    <svg viewBox="0 0 40 40" className="size-10" aria-hidden>
-      <rect width="40" height="40" rx="14" fill="#e6eee5" />
-      <path
-        d="M20 29c-5.5-3.6-9-7-9-11a4.6 4.6 0 0 1 9-1.6A4.6 4.6 0 0 1 29 18c0 4-3.5 7.4-9 11Z"
-        fill="#c9714a"
-      />
-      <circle cx="27.5" cy="12" r="2.5" fill="#5f7f68" />
-    </svg>
   );
 }

@@ -3,8 +3,8 @@ import type { Language } from "@/lib/types";
 export const LABELS: Record<Language, { tryThis: string; checkIn: string; professional: string; call: string; whenLabel: string }> = {
   en: {
     tryThis: "Try this",
-    checkIn: "Let's check in",
-    professional: "Worth asking a professional",
+    checkIn: "Check back",
+    professional: "Worth asking a professional too",
     call: "Call",
     whenLabel: "When",
   },

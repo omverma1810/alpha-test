@@ -2,6 +2,9 @@ import { coach } from "@/lib/coach";
 import { ModelError } from "@/lib/gemini";
 import { CoachRequestSchema } from "@/lib/schema";
 
+// Leave room for one model call plus a retry on a malformed reply.
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   let body: unknown;
   try {

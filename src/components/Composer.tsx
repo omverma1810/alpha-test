@@ -25,7 +25,7 @@ export default function Composer({ onSend, disabled }: { onSend: (text: string) 
         e.preventDefault();
         submit();
       }}
-      className="flex items-end gap-2 rounded-3xl border border-line bg-paper p-2 shadow-[0_6px_24px_-12px_rgba(47,42,37,0.25)] focus-within:border-sage"
+      className="flex items-end gap-2 rounded-2xl border border-line bg-paper p-1.5 focus-within:border-indigo"
     >
       <textarea
         value={text}
@@ -34,19 +34,16 @@ export default function Composer({ onSend, disabled }: { onSend: (text: string) 
         rows={1}
         maxLength={1000}
         dir="auto"
-        placeholder="Type your worry here"
+        placeholder="My son won't sleep without..."
         aria-label="Your message"
-        className={`max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 placeholder:text-muted/70 focus:outline-none field-sizing-content ${scriptClass(text)}`}
+        className={`max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 placeholder:text-muted focus:outline-none focus-visible:outline-none field-sizing-content ${scriptClass(text)}`}
       />
       <button
         type="submit"
         disabled={disabled || !text.trim()}
-        className="grid size-11 shrink-0 place-items-center rounded-full bg-clay text-white transition hover:brightness-95 disabled:opacity-40"
-        aria-label="Send"
+        className="h-11 shrink-0 rounded-xl bg-indigo px-4 text-[15px] font-semibold text-white hover:bg-[#25306a] disabled:bg-indigo/35"
       >
-        <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <path d="M5 12h13M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        Send
       </button>
     </form>
   );

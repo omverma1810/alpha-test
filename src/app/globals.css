@@ -1,35 +1,43 @@
 @import "tailwindcss";
 
+/*
+  Palette: a child's room after lights-out. Dusk-blue page, indigo ink,
+  one warm night-light yellow saved for the check-in, the thing a parent
+  comes back to.
+*/
 @theme {
-  --color-cream: #fbf6ee;
-  --color-paper: #fffdf9;
-  --color-line: #ece2d3;
-  --color-ink: #2f2a25;
-  --color-muted: #7a6f63;
-  --color-sage: #5f7f68;
-  --color-sage-soft: #e6eee5;
-  --color-clay: #c9714a;
-  --color-clay-soft: #f7e6dc;
-  --color-alert: #a2361f;
-  --color-alert-soft: #fbeae5;
+  --color-dusk: #edf0f7;
+  --color-paper: #ffffff;
+  --color-line: #d9deec;
+  --color-ink: #1c2140;
+  --color-muted: #5b6385;
+  --color-indigo: #2e3a7a;
+  --color-indigo-soft: #e1e5f4;
+  --color-leaf: #2f7d6d;
+  --color-lamp: #f2c14e;
+  --color-lamp-soft: #fff4d6;
+  --color-alert: #b42318;
+  --color-alert-soft: #feedeb;
 
-  --font-display: var(--font-display), Georgia, serif;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   --font-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-urdu: var(--font-urdu), "Noto Nastaliq Urdu", serif;
   --font-arabic: var(--font-arabic), "Noto Naskh Arabic", serif;
 }
 
-html {
-  background: var(--color-cream);
-}
-
+html,
 body {
-  background: var(--color-cream);
+  background: var(--color-dusk);
   color: var(--color-ink);
   font-family: var(--font-body);
 }
 
-/* Nastaliq sits tall; it needs room to breathe or the lines collide. */
+:focus-visible {
+  outline: 2px solid var(--color-indigo);
+  outline-offset: 2px;
+}
+
+/* Nastaliq sits tall; it needs room or the lines collide. */
 .urdu {
   font-family: var(--font-urdu);
   line-height: 2.2;
@@ -46,20 +54,19 @@ body {
   line-height: 1.75;
 }
 
-@keyframes rise {
-  from { opacity: 0; transform: translateY(6px); }
+/* The one piece of motion: a new reply settles in. */
+@keyframes settle {
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
-.rise { animation: rise 0.35s ease-out both; }
+.settle { animation: settle 0.3s ease-out both; }
 
-@keyframes breathe {
-  0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
-  40% { opacity: 1; transform: scale(1); }
+@keyframes glow {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
 }
-.dot { animation: breathe 1.3s infinite ease-in-out; }
-.dot:nth-child(2) { animation-delay: 0.15s; }
-.dot:nth-child(3) { animation-delay: 0.3s; }
+.glow { animation: glow 1.4s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .rise, .dot { animation: none; }
+  .settle, .glow { animation: none; }
 }

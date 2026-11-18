@@ -40,7 +40,8 @@ export const generateWithGemini: Generate = async ({ system, history, message })
         thinkingConfig: { thinkingLevel },
       },
     }),
-    signal: AbortSignal.timeout(30_000),
+    // Gemini 4 Argon can take a while to think even on "low"; most replies land in 5-15s.
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!res.ok) {
