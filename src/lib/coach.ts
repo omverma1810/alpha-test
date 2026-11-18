@@ -35,6 +35,15 @@ const SAFE_FALLBACK: Record<Language, Omit<PlanReply, "kind" | "language">> = {
     ],
     checkIn: { question: "ڈاکٹر نے کیا کہا؟", when: "ملاقات کے بعد" },
   },
+  ar: {
+    risk: "see_professional",
+    summary: "هذا سؤال يجيب عنه طبيب طفلك أو مختص، لذلك لن أتدخل في الجانب الطبي.",
+    steps: [
+      "دوّن ما لاحظته، ومتى يحدث، وكم يستمر.",
+      "احجز موعدًا مع طبيب طفلك وخذ هذه الملاحظات معك.",
+    ],
+    checkIn: { question: "ماذا قال الطبيب؟", when: "بعد الموعد" },
+  },
   roman_ur: {
     risk: "see_professional",
     summary: "Yeh sawal bachay ke doctor ya kisi mahir ka hai, is liye main medical pehlu par raaye nahi doon ga.",

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { REGIONS } from "@/lib/helplines";
-import { isRtl } from "@/lib/language";
+import { isRtl, scriptClass } from "@/lib/language";
 import type { ChatTurn, CoachReply, Region } from "@/lib/types";
 import Composer from "./Composer";
 import EscalationCard from "./EscalationCard";
@@ -18,6 +18,7 @@ const STARTERS = [
   "My 10-year-old won't put the tablet down and gets angry when I take it.",
   "میرا بیٹا ہر صبح اسکول جانے سے پہلے روتا ہے۔",
   "Meri beti khana nahi khaati aur bohat ziddi ho gayi hai.",
+  "ابني عمره أربع سنوات ولا ينام إلا بعد بكاء طويل كل ليلة.",
 ];
 
 /** What the model sees of earlier coach turns: the words, not the UI. */
@@ -77,7 +78,7 @@ export default function Chat() {
           <div>
             <p className="font-display text-lg leading-tight font-semibold">Parenting coach</p>
             <p className="text-xs text-muted">
-              Alpha Kids<span className="hidden sm:inline"> · English or Urdu</span>
+              Alpha Kids<span className="hidden sm:inline"> · English, اردو, العربية</span>
             </p>
           </div>
         </div>
@@ -115,7 +116,7 @@ export default function Chat() {
                   key={s}
                   onClick={() => send(s)}
                   dir="auto"
-                  className={`rounded-2xl border border-line bg-paper px-4 py-2.5 text-start text-sm transition hover:border-sage hover:bg-sage-soft ${isRtl(s) ? "urdu" : ""}`}
+                  className={`rounded-2xl border border-line bg-paper px-4 py-2.5 text-start text-sm transition hover:border-sage hover:bg-sage-soft ${scriptClass(s)}`}
                 >
                   {s}
                 </button>
@@ -162,11 +163,12 @@ export default function Chat() {
 
 function ParentBubble({ text }: { text: string }) {
   const rtl = isRtl(text);
+  const font = scriptClass(text);
   return (
     <div className="flex justify-end">
       <p
         dir="auto"
-        className={`max-w-[85%] rounded-3xl rounded-br-md bg-sage px-4 py-2.5 whitespace-pre-wrap text-white ${rtl ? "urdu rounded-br-3xl rounded-bl-md" : ""}`}
+        className={`max-w-[85%] rounded-3xl rounded-br-md bg-sage px-4 py-2.5 whitespace-pre-wrap text-white ${rtl ? `${font} rounded-br-3xl rounded-bl-md` : ""}`}
       >
         {text}
       </p>

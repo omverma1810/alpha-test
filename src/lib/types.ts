@@ -1,4 +1,4 @@
-export type Language = "en" | "ur" | "roman_ur";
+export type Language = "en" | "ur" | "roman_ur" | "ar";
 
 export type Region = "ae" | "in" | "pk" | "other";
 

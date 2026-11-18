@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
-import { isRtl } from "@/lib/language";
+import { scriptClass } from "@/lib/language";
 
 export default function Composer({ onSend, disabled }: { onSend: (text: string) => void; disabled: boolean }) {
   const [text, setText] = useState("");
@@ -34,9 +34,9 @@ export default function Composer({ onSend, disabled }: { onSend: (text: string) 
         rows={1}
         maxLength={1000}
         dir="auto"
-        placeholder="Type your worry, in English or اردو"
+        placeholder="Type your worry here"
         aria-label="Your message"
-        className={`max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 placeholder:text-muted/70 focus:outline-none field-sizing-content ${isRtl(text) ? "urdu" : ""}`}
+        className={`max-h-40 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 placeholder:text-muted/70 focus:outline-none field-sizing-content ${scriptClass(text)}`}
       />
       <button
         type="submit"

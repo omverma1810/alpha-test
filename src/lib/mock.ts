@@ -1,4 +1,5 @@
 import type { Generate } from "./gemini";
+import { detectLanguage } from "./language";
 
 /**
  * Canned replies for COACH_MOCK=1, so the UI can be tried without a key.
@@ -6,8 +7,20 @@ import type { Generate } from "./gemini";
  */
 export const mockGenerate: Generate = async ({ message }) => {
   await new Promise((r) => setTimeout(r, 700));
-  const urdu = /[؀-ۿ]/.test(message);
-  if (urdu) {
+  const language = detectLanguage(message);
+  if (language === "ar") {
+    return JSON.stringify({
+      language: "ar",
+      risk: "none",
+      summary: "وقت النوم أصبح صعبًا على الجميع، وتريد أمسيات أهدأ.",
+      steps: [
+        "ابدأ روتينًا هادئًا لمدة عشرين دقيقة في الوقت نفسه كل ليلة: استحمام ثم قصة.",
+        "أعطه خيارين يناسبانك، مثل أي قصة أو أي بيجامة.",
+      ],
+      check_in: { question: "كم ليلة هذا الأسبوع انتهت بدون بكاء؟", when: "بعد خمسة أيام" },
+    });
+  }
+  if (language === "ur") {
     return JSON.stringify({
       language: "ur",
       risk: "none",

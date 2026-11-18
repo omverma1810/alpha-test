@@ -2,15 +2,16 @@ import type { EscalationReply } from "@/lib/types";
 import { LABELS } from "./labels";
 
 export default function EscalationCard({ reply }: { reply: EscalationReply }) {
-  const rtl = reply.language === "ur";
+  const rtl = reply.language === "ur" || reply.language === "ar";
+  const font = reply.language === "ur" ? "urdu" : reply.language === "ar" ? "arabic" : "";
   const t = LABELS[reply.language];
 
   return (
     <article
       role="alert"
       dir={rtl ? "rtl" : "ltr"}
-      lang={reply.language === "en" ? "en" : "ur"}
-      className={`max-w-[92%] rounded-3xl border border-alert/25 bg-alert-soft p-5 ${rtl ? "urdu" : ""}`}
+      lang={reply.language === "roman_ur" ? "ur-Latn" : reply.language}
+      className={`max-w-[92%] rounded-3xl border border-alert/25 bg-alert-soft p-5 ${font}`}
     >
       <div className="flex items-center gap-2 text-alert">
         <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>

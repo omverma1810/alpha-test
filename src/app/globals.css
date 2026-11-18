@@ -16,6 +16,7 @@
   --font-display: var(--font-display), Georgia, serif;
   --font-body: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-urdu: var(--font-urdu), "Noto Nastaliq Urdu", serif;
+  --font-arabic: var(--font-arabic), "Noto Naskh Arabic", serif;
 }
 
 html {
@@ -35,6 +36,14 @@ body {
 }
 .urdu :is(p, li, span, h2) {
   line-height: 2.1;
+}
+
+.arabic {
+  font-family: var(--font-arabic);
+  line-height: 1.8;
+}
+.arabic :is(p, li, span, h2) {
+  line-height: 1.75;
 }
 
 @keyframes rise {

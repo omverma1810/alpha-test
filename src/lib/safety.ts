@@ -23,6 +23,9 @@ export function normalize(text: string): string {
     // Arabic letter variants people type on different keyboards
     .replace(/ي/g, "ی")
     .replace(/ك/g, "ک")
+    .replace(/ى/g, "ی")
+    .replace(/ة/g, "ه")
+    .replace(/[أإآ]/g, "ا")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -32,6 +35,13 @@ const ADULT =
   "(husband|wife|partner|boyfriend|girlfriend|father|dad|mother|stepfather|stepdad|stepmother|stepmom|uncle|aunt|grandfather|grandpa|grandmother|grandma|teacher|tutor|nanny|maid|driver|coach|neighbou?r|relative|cousin|someone|an adult|a man|a woman)";
 const HURT_ACT =
   "(hit|hits|hitting|beat|beats|beating|slap|slaps|slapping|kick|kicks|kicking|burn|burns|burned|choke|chokes|choked|touch|touches|touched|touching|abuse|abuses|abused|abusing|molest|molests|molested|hurt|hurts|hurting|punch|punches|punched)";
+
+// Arabic script has no \b in JS regex, so short words get explicit edges.
+const W = (word: string) => new RegExp(`(?:^|[\\s،.؟!])(?:${word})(?:$|[\\s،.؟!])`);
+
+// Arabic patterns are written for the text AFTER normalize(): ی for ي and ى, ک for ك, plain ا for أ إ آ.
+const AR_ADULT = "(زوجی|زوجتی|ابوه|ابوها|والده|والدها|عمه|عمها|خاله|خالها|جده|جدها|المعلم|المعلمه|المدرس|المدرسه|الخادمه|المربیه|السایق|السائق|شخص|رجل|احد الاقارب)";
+const AR_HURT = "(یضرب|تضرب|ضرب|ضربه|ضربها|یلمس|لمس|لمسه|لمسها|یعتدی|اعتدی|یتحرش|تحرش|یوذی|یؤذی|یعنف)";
 
 const RULES: Record<CrisisMatch["category"], RegExp[]> = {
   self_harm: [
@@ -55,6 +65,12 @@ const RULES: Record<CrisisMatch["category"], RegExp[]> = {
     /مر جانا چاہت/,
     /خود کو (نقصان|مار|زخمی)/,
     /جینا نہیں چاہت/,
+    // Arabic (MSA and Gulf)
+    /انتحار|ینتحر|تنتحر/,
+    /(یرید|ترید|یبی|تبی|یبغی|تبغی) (ان )?(یموت|تموت)/,
+    /(یوذی|یؤذی|توذی|تؤذی|یجرح|تجرح|یقتل|تقتل) (نفسه|نفسها)/,
+    /(ایذاء|اذیه) النفس/,
+    /(ما|لا) (یبی|تبی|یرید|ترید) (یعیش|تعیش)/,
   ],
   emergency: [
     /\b(not|isn't|is not|can't|cannot|stopped|struggling|trouble) breathing\b/,
@@ -86,6 +102,19 @@ const RULES: Record<CrisisMatch["category"], RegExp[]> = {
     /دورہ پڑ/,
     /گولیاں کھا/,
     /ڈوب/,
+    // Arabic
+    /(لا|ما|مو) (یتنفس|تتنفس)/,
+    /توقف عن التنفس|ضیق (شدید )?فی التنفس/,
+    /فاقد الوعی|فاقده الوعی|مغمی علیه|مغمی علیها|اغماء/,
+    /تشنج|نوبه صرع/,
+    /اختناق|یختنق|تختنق/,
+    /(ابتلع|ابتلعت|بلع|بلعت|شرب|شربت|اکل|اکلت).{0,30}(حبوب|دواء|ادویه|مبیض|کلور|سم|بطاریه|منظف|مواد کیمیاییه)/,
+    /تسمم/,
+    W("سم"),
+    /نزیف.{0,15}(شدید|کثیر|ما یوقف|لا یتوقف)/,
+    /(سقط|سقطت|طاح|طاحت) من.{0,15}(السطح|الشرفه|البلکونه|النافذه|الدرج|الدور)/,
+    W("غرق|یغرق|تغرق|کاد یغرق|کادت تغرق"),
+    /(لا|ما) (یستجیب|تستجیب|یصحی|تصحی)/,
   ],
   abuse: [
     new RegExp(`\\b${ADULT}\\b[^.!?]{0,40}\\b${HURT_ACT}\\b\\s+(my|our|the|his|her|their)?\\s*${CHILD}`),
@@ -107,6 +136,10 @@ const RULES: Record<CrisisMatch["category"], RegExp[]> = {
     /جنسی/,
     /زیادتی/,
     /غلط طریقے سے چھو/,
+    // Arabic
+    new RegExp(`${AR_ADULT}.{0,40}${AR_HURT}`),
+    /تحرش|اعتداء جنسی|اعتدی علیه|اعتدی علیها|اغتصاب/,
+    /(لمس|یلمس|لمسه|لمسها).{0,20}(بطریقه غیر لایقه|بطریقه غیر لائقه|اماکن خاصه|عورته|عورتها)/,
   ],
 };
 

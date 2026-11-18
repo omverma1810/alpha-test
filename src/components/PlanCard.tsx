@@ -2,14 +2,15 @@ import type { PlanReply } from "@/lib/types";
 import { LABELS } from "./labels";
 
 export default function PlanCard({ reply }: { reply: PlanReply }) {
-  const rtl = reply.language === "ur";
+  const rtl = reply.language === "ur" || reply.language === "ar";
+  const font = reply.language === "ur" ? "urdu" : reply.language === "ar" ? "arabic" : "";
   const t = LABELS[reply.language];
 
   return (
     <article
       dir={rtl ? "rtl" : "ltr"}
-      lang={reply.language === "en" ? "en" : "ur"}
-      className={`max-w-[92%] rounded-3xl rounded-bl-md border border-line bg-paper p-5 ${rtl ? "urdu rounded-bl-3xl rounded-br-md" : ""}`}
+      lang={reply.language === "roman_ur" ? "ur-Latn" : reply.language}
+      className={`max-w-[92%] rounded-3xl rounded-bl-md border border-line bg-paper p-5 ${rtl ? `${font} rounded-bl-3xl rounded-br-md` : ""}`}
     >
       {reply.risk === "see_professional" && (
         <p className="mb-3 inline-block rounded-full bg-clay-soft px-3 py-1 text-xs font-semibold text-clay">

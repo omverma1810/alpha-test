@@ -15,6 +15,13 @@ export const LABELS: Record<Language, { tryThis: string; checkIn: string; profes
     call: "کال کریں",
     whenLabel: "کب",
   },
+  ar: {
+    tryThis: "جرّب هذا",
+    checkIn: "لنتابع معًا",
+    professional: "يُفضَّل استشارة مختص",
+    call: "اتصل",
+    whenLabel: "متى",
+  },
   roman_ur: {
     tryThis: "Yeh try karein",
     checkIn: "Dobara baat karte hain",

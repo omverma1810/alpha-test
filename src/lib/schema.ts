@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ModelReplySchema = z.object({
-  language: z.enum(["en", "ur", "roman_ur"]),
+  language: z.enum(["en", "ur", "roman_ur", "ar"]),
   risk: z.enum(["none", "see_professional", "crisis"]),
   summary: z.string().min(1).max(400),
   steps: z.array(z.string().min(1).max(300)).min(1).max(4),
