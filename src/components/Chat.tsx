@@ -7,6 +7,8 @@ import type { ChatTurn, CoachReply, Region } from "@/lib/types";
 import Composer from "./Composer";
 import EscalationCard from "./EscalationCard";
 import NightLight from "./NightLight";
+import OffTopicCard from "./OffTopicCard";
+import ReplySkeleton from "./ReplySkeleton";
 import PlanCard from "./PlanCard";
 
 type Message =
@@ -59,6 +61,7 @@ function toTurn(m: Message): ChatTurn | null {
   if (m.role === "parent") return { role: "parent", text: m.text };
   if (m.role === "coach") {
     const r = m.reply;
+    if (r.kind === "off_topic") return { role: "coach", text: r.message };
     const body = r.kind === "plan" ? [r.summary, ...r.steps] : [r.title, r.message];
     return { role: "coach", text: [...body, `Check-in: ${r.checkIn.question} (${r.checkIn.when})`].join("\n") };
   }
@@ -191,16 +194,21 @@ export default function Chat() {
               <li key={m.id} className="settle">
                 {m.role === "parent" && <ParentBubble text={m.text} />}
                 {m.role === "coach" &&
-                  (m.reply.kind === "plan" ? <PlanCard reply={m.reply} /> : <EscalationCard reply={m.reply} />)}
+                  (m.reply.kind === "plan" ? (
+                    <PlanCard reply={m.reply} />
+                  ) : m.reply.kind === "escalation" ? (
+                    <EscalationCard reply={m.reply} />
+                  ) : (
+                    <OffTopicCard reply={m.reply} onPick={send} />
+                  ))}
                 {m.role === "error" && (
                   <p className="rounded-xl border border-line bg-paper px-4 py-3 text-sm text-muted">{m.text}</p>
                 )}
               </li>
             ))}
             {sending && (
-              <li className="flex items-center gap-3 text-sm text-muted">
-                <NightLight className="glow size-7" />
-                Reading what you wrote
+              <li>
+                <ReplySkeleton />
               </li>
             )}
           </ol>

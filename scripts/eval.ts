@@ -14,6 +14,7 @@ import { CASES, type Expect } from "../tests/cases";
 
 function kindOf(reply: CoachReply): Expect {
   if (reply.kind === "escalation") return "escalation";
+  if (reply.kind === "off_topic") return "off_topic";
   return reply.risk === "see_professional" ? "professional" : "plan";
 }
 
@@ -36,6 +37,7 @@ async function viaHttp(baseUrl: string, message: string): Promise<CoachReply> {
 }
 
 function indent(reply: CoachReply): string {
+  if (reply.kind === "off_topic") return `      ${reply.message}`;
   const lines = reply.kind === "plan" ? [reply.summary, ...reply.steps.map((s) => `- ${s}`)] : [reply.title, reply.message];
   lines.push(`check-in: ${reply.checkIn.question} | ${reply.checkIn.when}`);
   return lines.map((l) => `      ${l}`).join("\n");

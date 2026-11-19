@@ -18,12 +18,15 @@ export const generateWithGemini: Generate = async ({ system, history, message })
   const model = process.env.GEMINI_MODEL || "gemini-4-argon";
   const thinkingLevel = process.env.GEMINI_THINKING_LEVEL || "low";
 
+  // Parent text is fenced in tags (and the tags stripped from inside it) so it can't
+  // pose as instructions or close the fence early.
+  const fence = (text: string) => `<parent_message>\n${text.replace(/<\/?parent_message>/gi, "")}\n</parent_message>`;
   const contents = [
     ...history.map((turn) => ({
       role: turn.role === "parent" ? "user" : "model",
-      parts: [{ text: turn.text }],
+      parts: [{ text: turn.role === "parent" ? fence(turn.text) : turn.text }],
     })),
-    { role: "user", parts: [{ text: message }] },
+    { role: "user", parts: [{ text: fence(message) }] },
   ];
 
   const res = await fetch(`${API_BASE}/${encodeURIComponent(model)}:generateContent`, {
@@ -36,7 +39,7 @@ export const generateWithGemini: Generate = async ({ system, history, message })
         responseMimeType: "application/json",
         // Generous on purpose: thinking tokens count against this, and running
         // out returns an empty reply with finishReason MAX_TOKENS.
-        maxOutputTokens: 2048,
+        maxOutputTokens: 1536,
         thinkingConfig: { thinkingLevel },
       },
     }),

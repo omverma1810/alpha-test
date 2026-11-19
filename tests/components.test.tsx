@@ -5,6 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
 import Chat from "@/components/Chat";
 import EscalationCard from "@/components/EscalationCard";
+import OffTopicCard from "@/components/OffTopicCard";
+import { buildOffTopic } from "@/lib/offTopic";
 import PlanCard from "@/components/PlanCard";
 import { buildEscalation } from "@/lib/escalation";
 import type { CoachReply, PlanReply } from "@/lib/types";
@@ -135,7 +137,7 @@ describe("Chat", () => {
     await user.type(box, "line one{Shift>}{Enter}{/Shift}line two");
     expect(box).toHaveValue("line one\nline two");
     await user.click(screen.getByRole("button", { name: "Send" }));
-    expect(screen.getByText("Reading what you wrote")).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /writing a reply/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
 
     await user.type(box, "again{Enter}");
@@ -239,6 +241,32 @@ describe("Conversation history", () => {
   it("explains a repeated escalation that comes from earlier in the chat", () => {
     render(<EscalationCard reply={buildEscalation("self_harm", "en", "in", "history")} />);
     expect(screen.getByText(/because of something you shared earlier/i)).toBeInTheDocument();
+  });
+});
+
+describe("OffTopicCard", () => {
+  it("redirects to parenting and sends an example when tapped", async () => {
+    const fetchMock = respondWith({ body: { reply: buildOffTopic("en", "precheck") } }, { body: { reply: planReply } });
+    const user = userEvent.setup();
+    render(<Chat />);
+    await user.type(screen.getByLabelText("Your message"), "fix my code{Enter}");
+    expect(await screen.findByText(/I can only help with parenting/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "My toddler bites other kids at daycare." }));
+    await screen.findByText("Bedtime is turning into a battle.");
+    const body = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(body.message).toBe("My toddler bites other kids at daycare.");
+    expect(body.history[1].text).toMatch(/I can only help with parenting/);
+  });
+
+  it.each([
+    ["ur", "urdu", "rtl"],
+    ["ar", "arabic", "rtl"],
+    ["roman_ur", "", "ltr"],
+  ] as const)("lays out %s", (language, font, dir) => {
+    render(<OffTopicCard reply={buildOffTopic(language, "model")} onPick={() => {}} />);
+    const card = screen.getByRole("article");
+    expect(card).toHaveAttribute("dir", dir);
+    if (font) expect(card).toHaveClass(font);
   });
 });
 

@@ -43,7 +43,17 @@ export interface EscalationReply {
   checkIn: CheckIn;
 }
 
-export type CoachReply = PlanReply | EscalationReply;
+/** Fixed reply for anything that isn't about parenting. */
+export interface OffTopicReply {
+  kind: "off_topic";
+  language: Language;
+  /** "precheck" = caught by the code/injection filter without a model call */
+  source: "precheck" | "model";
+  message: string;
+  examples: string[];
+}
+
+export type CoachReply = PlanReply | EscalationReply | OffTopicReply;
 
 export interface ChatTurn {
   role: "parent" | "coach";

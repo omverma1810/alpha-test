@@ -29,6 +29,11 @@ describe("CoachRequestSchema", () => {
     expect(CoachRequestSchema.safeParse({ message: "x".repeat(1001) }).success).toBe(false);
   });
 
+  it("strips control characters but keeps line breaks", () => {
+    expect(CoachRequestSchema.parse({ message: "a\u0000b\u0007\nc" }).message).toBe("ab\nc");
+    expect(CoachRequestSchema.safeParse({ message: "\u0000\u0001" }).success).toBe(false);
+  });
+
   it("rejects unknown regions", () => {
     expect(CoachRequestSchema.safeParse({ message: "hi", region: "us" }).success).toBe(false);
   });
@@ -42,6 +47,10 @@ describe("ModelReplySchema", () => {
     steps: ["a"],
     check_in: { question: "q", when: "w" },
   };
+
+  it("accepts the short off-topic reply", () => {
+    expect(ModelReplySchema.parse({ on_topic: false })).toEqual({ on_topic: false });
+  });
 
   it("accepts a well-formed reply", () => {
     expect(ModelReplySchema.parse(valid)).toEqual(valid);

@@ -2,9 +2,11 @@ import { buildEscalation } from "./escalation";
 import { generateWithGemini, ModelError, type Generate } from "./gemini";
 import { detectLanguage } from "./language";
 import { mockGenerate } from "./mock";
+import { buildOffTopic } from "./offTopic";
+import { looksOffTopic } from "./topic";
 import { systemPrompt } from "./prompt";
 import { screenForCrisis } from "./safety";
-import { extractJson, ModelReplySchema, type CoachRequest, type ModelReply } from "./schema";
+import { extractJson, ModelReplySchema, type CoachRequest, type ModelPlan, type ModelReply } from "./schema";
 import type { ChatTurn, CoachReply, Language, PlanReply } from "./types";
 
 const HISTORY_TURNS = 10;
@@ -83,7 +85,7 @@ const SAFE_FALLBACK: Record<Language, Omit<PlanReply, "kind" | "language">> = {
   },
 };
 
-function looksUnsafe(reply: ModelReply): boolean {
+function looksUnsafe(reply: ModelPlan): boolean {
   const text = [reply.summary, ...reply.steps].join(" ");
   return UNSAFE_OUTPUT.some((rule) => rule.test(text));
 }
@@ -119,6 +121,9 @@ export async function coach(req: CoachRequest, generate?: Generate): Promise<Coa
   const earlier = crisisInHistory(req.history);
   if (earlier) return buildEscalation(earlier.category, language, req.region, "history");
 
+  // Code, SQL, stack traces and "ignore your instructions" never reach the model.
+  if (looksOffTopic(req.message)) return buildOffTopic(language, "precheck");
+
   const gen = generate ?? (process.env.COACH_MOCK === "1" ? mockGenerate : generateWithGemini);
 
   let reply: ModelReply;
@@ -131,6 +136,8 @@ export async function coach(req: CoachRequest, generate?: Generate): Promise<Coa
     }
     throw err;
   }
+
+  if (reply.on_topic === false) return buildOffTopic(language, "model");
 
   // Layer 2: the model's own risk flag.
   if (reply.risk === "crisis") return buildEscalation("general", language, req.region, "model");
