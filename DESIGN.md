@@ -4,7 +4,7 @@ Live: https://alpha-test-three.vercel.app
 
 A small Next.js app where a parent describes a worry in English, Urdu (script or Roman) or Arabic and gets a short, structured plan back: one line that shows the worry was understood, two or three steps to try, and a check-in (a question, or a time to come back). If the parent describes an emergency, abuse or self-harm, the coach doesn't coach. It shows a fixed, hand-written escalation with helpline numbers for the selected country.
 
-No login, no database. The conversation lives in the page: it's kept in the tab's `sessionStorage` (so a refresh doesn't lose it, and closing the tab deletes it), shown in full on the page, and the last 10 turns are sent with each message so the coach can build on its earlier advice. "Start over" clears it.
+No login, no database. The conversation lives in the page: it's kept in the browser's `localStorage` (so refreshes and new tabs don't lose it), shown in full on the page, and the last 10 turns are sent with each message so the coach can build on its earlier advice. "Start over" clears it.
 
 Once a parent has described a crisis, the conversation stays in "get help" mode: a vague follow-up such as "ok, what now?" gets the same escalation, with the right helplines, instead of a parenting plan. The server re-checks the recent history itself rather than trusting the browser.
 

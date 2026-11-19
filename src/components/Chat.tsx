@@ -24,14 +24,14 @@ const STARTERS = [
   "ابني عمره أربع سنوات ولا ينام إلا بعد بكاء طويل كل ليلة.",
 ];
 
-// Kept in sessionStorage: it survives a refresh, and disappears when the tab is
-// closed. Nothing is sent to a server or stored anywhere else.
+// Kept in this browser's localStorage, so it survives refreshes, new tabs and
+// restarts until the parent taps "Start over". Nothing is stored on a server.
 const STORAGE_KEY = "alpha-coach-conversation-v1";
 const MAX_STORED = 40;
 
 function loadSaved(): { messages: Message[]; region: Region } | null {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!Array.isArray(data?.messages)) return null;
@@ -49,8 +49,8 @@ function save(messages: Message[], region: Region) {
   try {
     // Errors aren't part of the conversation, so they aren't kept.
     const kept = messages.filter((m) => m.role !== "error").slice(-MAX_STORED);
-    if (kept.length === 0) sessionStorage.removeItem(STORAGE_KEY);
-    else sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ messages: kept, region }));
+    if (kept.length === 0) localStorage.removeItem(STORAGE_KEY);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify({ messages: kept, region }));
   } catch {
     // Storage can be full or blocked (private mode); the chat still works without it.
   }
@@ -74,9 +74,11 @@ export default function Chat() {
   const [region, setRegion] = useState<Region>("ae");
   const nextId = useRef(1);
   const bottom = useRef<HTMLDivElement>(null);
-  const restored = useRef(false);
+  // false until we've read browser storage. Saving waits for it, otherwise the
+  // first render's empty list would overwrite the saved conversation.
+  const [ready, setReady] = useState(false);
 
-  // Restore after mount: sessionStorage doesn't exist during server rendering.
+  // Restore after mount: localStorage doesn't exist during server rendering.
   useEffect(() => {
     const saved = loadSaved();
     if (saved) {
@@ -85,12 +87,12 @@ export default function Chat() {
       setMessages(saved.messages);
       setRegion(saved.region);
     }
-    restored.current = true;
+    setReady(true);
   }, []);
 
   useEffect(() => {
-    if (restored.current) save(messages, region);
-  }, [messages, region]);
+    if (ready) save(messages, region);
+  }, [ready, messages, region]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -163,7 +165,7 @@ export default function Chat() {
       </header>
 
       <main className="flex-1 pb-8">
-        {empty ? (
+        {!ready ? null : empty ? (
           <section className="pt-10 sm:pt-16">
             <h1 className="font-display text-[2.5rem] leading-[1.05] font-bold tracking-tight text-indigo sm:text-[3.25rem]">
               What&apos;s happening with your child?

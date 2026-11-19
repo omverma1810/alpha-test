@@ -32,7 +32,7 @@ function respondWith(...replies: Array<{ ok?: boolean; body: unknown } | Error>)
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  sessionStorage.clear();
+  localStorage.clear();
 });
 
 describe("Chat", () => {
@@ -174,7 +174,7 @@ describe("Conversation history", () => {
     await screen.findByText("Busy");
     first.unmount();
 
-    const saved = JSON.parse(sessionStorage.getItem(KEY)!);
+    const saved = JSON.parse(localStorage.getItem(KEY)!);
     expect(saved.region).toBe("pk");
     expect(saved.messages.map((m: { role: string }) => m.role)).toEqual(["parent", "coach", "parent"]);
 
@@ -191,6 +191,14 @@ describe("Conversation history", () => {
     expect(body.region).toBe("pk");
   });
 
+  it("never overwrites a saved conversation while the page is loading", async () => {
+    localStorage.setItem(KEY, JSON.stringify({ region: "in", messages: [{ id: 1, role: "parent", text: "saved worry" }] }));
+    render(<Chat />);
+    expect(await screen.findByText("saved worry")).toBeInTheDocument();
+    expect(JSON.parse(localStorage.getItem(KEY)!).messages[0].text).toBe("saved worry");
+    expect(screen.getByLabelText(/country for helpline/i)).toHaveValue("in");
+  });
+
   it("Start over clears the page and the saved copy", async () => {
     respondWith({ body: { reply: planReply } });
     const user = userEvent.setup();
@@ -200,19 +208,19 @@ describe("Conversation history", () => {
     await screen.findByText("Bedtime is turning into a battle.");
     await user.click(screen.getByRole("button", { name: "Start over" }));
     expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
-    expect(sessionStorage.getItem(KEY)).toBeNull();
+    expect(localStorage.getItem(KEY)).toBeNull();
   });
 
   it("ignores saved data that is corrupt or the wrong shape", () => {
-    sessionStorage.setItem(KEY, "{not json");
+    localStorage.setItem(KEY, "{not json");
     const a = render(<Chat />);
     expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
     a.unmount();
-    sessionStorage.setItem(KEY, JSON.stringify({ messages: "nope" }));
+    localStorage.setItem(KEY, JSON.stringify({ messages: "nope" }));
     const b = render(<Chat />);
     expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
     b.unmount();
-    sessionStorage.setItem(
+    localStorage.setItem(
       KEY,
       JSON.stringify({ region: "zz", messages: [{ id: 3, role: "parent", text: "kept" }, { id: 4, role: "coach" }, { id: 5, role: "error", text: "x" }] }),
     );
