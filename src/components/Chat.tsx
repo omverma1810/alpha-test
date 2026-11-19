@@ -132,14 +132,14 @@ export default function Chat() {
       <header className="flex items-center justify-between gap-3 py-4">
         <div className="flex items-center gap-2.5">
           <NightLight className="size-8" />
-          <p className="font-display text-[17px] font-bold tracking-tight">Alpha Kids coach</p>
+          <p className="font-display text-[17px] font-bold tracking-tight whitespace-nowrap">Alpha Kids coach</p>
         </div>
         <div className="flex items-center gap-2">
         {!empty && (
           <button
             onClick={startOver}
             disabled={sending}
-            className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-indigo-soft hover:text-indigo disabled:opacity-50"
+            className="rounded-lg px-2 py-1.5 text-sm whitespace-nowrap text-muted hover:bg-indigo-soft hover:text-indigo disabled:opacity-50"
           >
             Start over
           </button>
@@ -149,7 +149,7 @@ export default function Chat() {
           <select
             value={region}
             onChange={(e) => setRegion(e.target.value as Region)}
-            className="rounded-lg border border-line bg-paper px-2.5 py-1.5 text-sm text-ink"
+            className="max-w-28 rounded-lg border border-line bg-paper px-2 py-1.5 text-sm text-ink sm:max-w-none"
             aria-label="Country for helpline numbers"
           >
             {REGIONS.map((r) => (
