@@ -1,10 +1,12 @@
 # Parenting coach (Alpha Kids test)
 
-Live: https://alpha-test-om-vermas-projects.vercel.app
+Live: https://alpha-test-three.vercel.app
 
 A small Next.js app where a parent describes a worry in English, Urdu (script or Roman) or Arabic and gets a short, structured plan back: one line that shows the worry was understood, two or three steps to try, and a check-in (a question, or a time to come back). If the parent describes an emergency, abuse or self-harm, the coach doesn't coach. It shows a fixed, hand-written escalation with helpline numbers for the selected country.
 
-No login, no database. The conversation lives in the page and is sent along with each message.
+No login, no database. The conversation lives in the page: it's kept in the tab's `sessionStorage` (so a refresh doesn't lose it, and closing the tab deletes it), shown in full on the page, and the last 10 turns are sent with each message so the coach can build on its earlier advice. "Start over" clears it.
+
+Once a parent has described a crisis, the conversation stays in "get help" mode: a vague follow-up such as "ok, what now?" gets the same escalation, with the right helplines, instead of a parenting plan. The server re-checks the recent history itself rather than trusting the browser.
 
 ## Run it
 
@@ -44,7 +46,7 @@ Crisis replies are templates in `src/lib/escalation.ts`, not generated text, so 
 ```bash
 npm run eval            # keyword screen + language detection, no key needed
 npm run eval -- --live  # every case through the full pipeline, including Gemini
-npm run eval -- --url=https://alpha-test-om-vermas-projects.vercel.app   # same, against the deployed app
+npm run eval -- --url=https://alpha-test-three.vercel.app   # same, against the deployed app
 ```
 
 32 cases: everyday worries (including the tricky "my son hits his sister", in English and Arabic, which must not count as abuse), requests for a diagnosis, a medicine dose and legal advice, a prompt-injection attempt, and crises in English, Urdu, Roman Urdu and Arabic. On 18 Nov 2026 all 32 passed offline and all 32 passed live against the deployed app with `gemini-4-argon`. For `--live` locally, load the key first with `set -a; . ./.env.local; set +a`.
@@ -52,13 +54,13 @@ npm run eval -- --url=https://alpha-test-om-vermas-projects.vercel.app   # same,
 ## Tests and CI
 
 ```bash
-npm test                # 151 unit and component tests (Vitest + Testing Library)
+npm test                # 159 unit and component tests (Vitest + Testing Library)
 npm run test:coverage   # same, fails under 90% on lines, branches, functions or statements
 npm run typecheck
 npx eslint . --max-warnings=0
 ```
 
-Coverage on 18 Nov 2026: 99% of statements and lines, 97.6% of branches, 100% of functions. The tests cover the keyword screen in all four languages, the full coach pipeline with a fake model (retries, the model's crisis flag, the dose and diagnosis check, Gemini refusing a prompt), the Gemini client with a mocked `fetch`, the API route (validation, same-site check, size limit, rate limit, error handling) and the UI (sending, history, errors, right-to-left layout, tap-to-call numbers).
+Coverage on 19 Nov 2026: 99% of statements and lines, 97.4% of branches, 100% of functions. The tests cover the keyword screen in all four languages, the full coach pipeline with a fake model (retries, the model's crisis flag, the dose and diagnosis check, Gemini refusing a prompt), the Gemini client with a mocked `fetch`, the API route (validation, same-site check, size limit, rate limit, error handling) and the UI (sending, history, errors, right-to-left layout, tap-to-call numbers).
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint, type check, tests with coverage, the safety eval and a production build on every push and pull request, plus a dependency audit that fails on any vulnerability in production dependencies.
 

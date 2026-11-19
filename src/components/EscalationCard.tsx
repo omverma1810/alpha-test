@@ -51,6 +51,13 @@ export default function EscalationCard({ reply }: { reply: EscalationReply }) {
         ))}
       </ol>
 
+      {reply.source === "history" && (
+        <p className="mt-4 text-sm text-muted" dir="ltr">
+          Showing this again because of something you shared earlier. If you want to talk about something else, use
+          Start over.
+        </p>
+      )}
+
       <p className="mt-5 border-t border-alert/20 pt-3 text-[15px]">
         <span className="font-semibold">{reply.checkIn.question}</span>
         <span className="block text-sm text-muted">{reply.checkIn.when}</span>

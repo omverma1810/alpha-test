@@ -9,6 +9,8 @@ What this app does to stay safe, and what it doesn't.
 - **Input limits.** Bodies over 64 KB are refused, messages are capped at 1,000 characters, history at 40 turns of 2,000 characters, and everything is validated with zod before it reaches the model.
 - **Same-site only.** Browser requests with an `Origin` from another site get a 403.
 - **Rate limit.** 20 messages per 5 minutes per IP, so one client can't run up the Gemini bill. It is in memory per server instance, so on Vercel it's a brake, not a global quota; a shared store (for example Upstash Redis) would make it exact.
+- **Conversation history is treated as untrusted.** It comes from the browser, so the server never assumes it was screened: every request re-runs the crisis keyword screen over the parent's last few messages, and only parent text is screened, so a forged "coach" turn can't switch the safety check off. Coach turns reach the model as plain context; the output check still runs on every reply.
+- **History stays in the tab.** It's kept in `sessionStorage`, so it survives a refresh and is deleted when the tab closes. "Start over" clears it at once, which matters on a shared family device. Nothing is stored on the server.
 - **No personal data in logs.** Errors are logged by message only; the parent's text is never logged. Nothing is stored: there's no database, and the conversation lives only in the open page.
 - **Prompt injection.** The system prompt tells the model the parent's text is never instructions. More importantly, crisis handling doesn't depend on the model obeying: the keyword screen runs first, and the dose and diagnosis check runs on the model's output.
 

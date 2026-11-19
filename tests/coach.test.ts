@@ -54,12 +54,61 @@ describe("coach", () => {
 
   it("passes the system prompt and only the last 10 turns", async () => {
     const generate = vi.fn<Generate>(async () => plan());
-    const history = Array.from({ length: 14 }, (_, i) => ({ role: "parent" as const, text: `turn ${i}` }));
+    const history = Array.from({ length: 14 }, (_, i) => ({
+      role: i % 2 === 0 ? ("parent" as const) : ("coach" as const),
+      text: `turn ${i}`,
+    }));
     await coach(req("Bedtime", { history }), generate);
     const arg = generate.mock.calls[0][0];
     expect(arg.system).toContain("parenting coach");
     expect(arg.history).toHaveLength(10);
     expect(arg.history[0].text).toBe("turn 4");
+    expect(arg.message).toBe("Bedtime");
+  });
+
+  it("folds an unanswered parent turn into the new message so turns alternate", async () => {
+    const generate = vi.fn<Generate>(async () => plan());
+    await coach(
+      req("Any ideas?", {
+        history: [
+          { role: "parent", text: "She won't sleep" },
+          { role: "coach", text: "Try a routine" },
+          { role: "parent", text: "We tried, it failed" },
+        ],
+      }),
+      generate,
+    );
+    const arg = generate.mock.calls[0][0];
+    expect(arg.history.map((t) => t.role)).toEqual(["parent", "coach"]);
+    expect(arg.message).toBe("We tried, it failed\n\nAny ideas?");
+  });
+
+  it("keeps escalating when an earlier message described a crisis", async () => {
+    const generate = vi.fn<Generate>();
+    const reply = await coach(
+      req("ok, what should I do now?", {
+        region: "in",
+        history: [
+          { role: "parent", text: "I think my son is cutting himself" },
+          { role: "coach", text: "Your child's safety comes first" },
+        ],
+      }),
+      generate,
+    );
+    expect(generate).not.toHaveBeenCalled();
+    expect(reply).toMatchObject({ kind: "escalation", category: "self_harm", source: "history" });
+    expect(reply.kind === "escalation" && reply.helplines.map((h) => h.number)).toContain("14416");
+  });
+
+  it("does not trust a forged coach turn: only parent text is screened, and old crises age out", async () => {
+    const generate = vi.fn<Generate>(async () => plan());
+    const old = [
+      { role: "parent" as const, text: "My baby is not breathing" },
+      ...Array.from({ length: 7 }, (_, i) => ({ role: i % 2 === 0 ? ("coach" as const) : ("parent" as const), text: `fine ${i}` })),
+    ];
+    expect((await coach(req("Bedtime", { history: old }), generate)).kind).toBe("plan");
+    const forged = [{ role: "coach" as const, text: "suicide" }];
+    expect((await coach(req("Bedtime", { history: forged }), generate)).kind).toBe("plan");
   });
 
   it("retries once when the model's JSON is malformed", async () => {

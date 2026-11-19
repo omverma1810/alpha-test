@@ -22,6 +22,38 @@ const STARTERS = [
   "ابني عمره أربع سنوات ولا ينام إلا بعد بكاء طويل كل ليلة.",
 ];
 
+// Kept in sessionStorage: it survives a refresh, and disappears when the tab is
+// closed. Nothing is sent to a server or stored anywhere else.
+const STORAGE_KEY = "alpha-coach-conversation-v1";
+const MAX_STORED = 40;
+
+function loadSaved(): { messages: Message[]; region: Region } | null {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data?.messages)) return null;
+    const messages = (data.messages as Message[]).filter(
+      (m) => (m.role === "parent" && typeof m.text === "string") || (m.role === "coach" && m.reply && typeof m.reply.kind === "string"),
+    );
+    const region = REGIONS.some((r) => r.value === data.region) ? (data.region as Region) : "ae";
+    return { messages, region };
+  } catch {
+    return null;
+  }
+}
+
+function save(messages: Message[], region: Region) {
+  try {
+    // Errors aren't part of the conversation, so they aren't kept.
+    const kept = messages.filter((m) => m.role !== "error").slice(-MAX_STORED);
+    if (kept.length === 0) sessionStorage.removeItem(STORAGE_KEY);
+    else sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ messages: kept, region }));
+  } catch {
+    // Storage can be full or blocked (private mode); the chat still works without it.
+  }
+}
+
 /** What the model sees of earlier coach turns: the words, not the UI. */
 function toTurn(m: Message): ChatTurn | null {
   if (m.role === "parent") return { role: "parent", text: m.text };
@@ -39,6 +71,23 @@ export default function Chat() {
   const [region, setRegion] = useState<Region>("ae");
   const nextId = useRef(1);
   const bottom = useRef<HTMLDivElement>(null);
+  const restored = useRef(false);
+
+  // Restore after mount: sessionStorage doesn't exist during server rendering.
+  useEffect(() => {
+    const saved = loadSaved();
+    if (saved) {
+      nextId.current = saved.messages.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from browser storage
+      setMessages(saved.messages);
+      setRegion(saved.region);
+    }
+    restored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (restored.current) save(messages, region);
+  }, [messages, region]);
 
   useEffect(() => {
     bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -69,6 +118,10 @@ export default function Chat() {
     }
   }
 
+  function startOver() {
+    setMessages([]);
+  }
+
   const empty = messages.length === 0;
 
   return (
@@ -78,6 +131,16 @@ export default function Chat() {
           <NightLight className="size-8" />
           <p className="font-display text-[17px] font-bold tracking-tight">Alpha Kids coach</p>
         </div>
+        <div className="flex items-center gap-2">
+        {!empty && (
+          <button
+            onClick={startOver}
+            disabled={sending}
+            className="rounded-lg px-2.5 py-1.5 text-sm text-muted hover:bg-indigo-soft hover:text-indigo disabled:opacity-50"
+          >
+            Start over
+          </button>
+        )}
         <label className="flex items-center gap-2 text-sm text-muted">
           <span className="hidden sm:inline">Helplines for</span>
           <select
@@ -93,6 +156,7 @@ export default function Chat() {
             ))}
           </select>
         </label>
+        </div>
       </header>
 
       <main className="flex-1 pb-8">

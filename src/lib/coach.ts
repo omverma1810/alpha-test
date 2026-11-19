@@ -5,9 +5,37 @@ import { mockGenerate } from "./mock";
 import { systemPrompt } from "./prompt";
 import { screenForCrisis } from "./safety";
 import { extractJson, ModelReplySchema, type CoachRequest, type ModelReply } from "./schema";
-import type { CoachReply, Language, PlanReply } from "./types";
+import type { ChatTurn, CoachReply, Language, PlanReply } from "./types";
 
 const HISTORY_TURNS = 10;
+// How far back a crisis keeps the conversation in "get help" mode.
+const CRISIS_MEMORY_TURNS = 6;
+
+/**
+ * The history comes from the browser, so it's untrusted: we never assume the
+ * client screened it. Re-running the keyword screen over recent parent turns
+ * also means a crisis can't be "talked past" with a vague follow-up like
+ * "ok, what should I do now?".
+ */
+function crisisInHistory(history: ChatTurn[]) {
+  const recentParent = history.slice(-CRISIS_MEMORY_TURNS).filter((t) => t.role === "parent");
+  for (let i = recentParent.length - 1; i >= 0; i--) {
+    const hit = screenForCrisis(recentParent[i].text);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/** Gemini expects turns to alternate; fold any back-to-back turns from the same side into one. */
+export function toAlternating(history: ChatTurn[]): ChatTurn[] {
+  const out: ChatTurn[] = [];
+  for (const turn of history) {
+    const last = out[out.length - 1];
+    if (last && last.role === turn.role) last.text = `${last.text}\n\n${turn.text}`;
+    else out.push({ ...turn });
+  }
+  return out;
+}
 
 // Last line of defence on the model's output. If a reply slips past the prompt
 // with a dose or a diagnosis in it, we don't show it.
@@ -61,10 +89,12 @@ function looksUnsafe(reply: ModelReply): boolean {
 }
 
 async function askModel(generate: Generate, req: CoachRequest, language: Language): Promise<ModelReply> {
+  // A parent turn with no reply (say the request failed) gets folded into the new message.
+  const turns = toAlternating([...req.history.slice(-HISTORY_TURNS), { role: "parent", text: req.message }]);
   const input = {
     system: systemPrompt(language),
-    history: req.history.slice(-HISTORY_TURNS),
-    message: req.message,
+    history: turns.slice(0, -1),
+    message: turns[turns.length - 1].text,
   };
 
   let lastError: unknown;
@@ -85,6 +115,9 @@ export async function coach(req: CoachRequest, generate?: Generate): Promise<Coa
   // Layer 1: keyword screen. A match never reaches the model.
   const crisis = screenForCrisis(req.message);
   if (crisis) return buildEscalation(crisis.category, language, req.region, "precheck");
+
+  const earlier = crisisInHistory(req.history);
+  if (earlier) return buildEscalation(earlier.category, language, req.region, "history");
 
   const gen = generate ?? (process.env.COACH_MOCK === "1" ? mockGenerate : generateWithGemini);
 

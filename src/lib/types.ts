@@ -30,8 +30,12 @@ export interface EscalationReply {
   kind: "escalation";
   language: Language;
   category: CrisisCategory;
-  /** "precheck" = caught by the keyword screen, "model" = flagged by the LLM */
-  source: "precheck" | "model";
+  /**
+   * "precheck" = this message tripped the keyword screen,
+   * "history"  = an earlier message in the conversation did,
+   * "model"    = the LLM flagged it.
+   */
+  source: "precheck" | "history" | "model";
   title: string;
   message: string;
   steps: string[];

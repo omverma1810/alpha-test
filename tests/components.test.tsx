@@ -28,7 +28,10 @@ function respondWith(...replies: Array<{ ok?: boolean; body: unknown } | Error>)
   return fn;
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  sessionStorage.clear();
+});
 
 describe("Chat", () => {
   it("shows the welcome and example worries in all three scripts", () => {
@@ -152,6 +155,90 @@ describe("Chat", () => {
     const cards = await screen.findAllByRole("article");
     expect(cards[0]).toHaveAttribute("dir", "rtl");
     expect(cards[1]).toHaveClass("arabic");
+  });
+});
+
+describe("Conversation history", () => {
+  const KEY = "alpha-coach-conversation-v1";
+
+  it("keeps the conversation across a page refresh, without errors", async () => {
+    respondWith({ body: { reply: planReply } }, { ok: false, body: { error: "Busy" } });
+    const user = userEvent.setup();
+    const first = render(<Chat />);
+    await user.selectOptions(screen.getByLabelText(/country for helpline/i), "pk");
+    await user.type(screen.getByLabelText("Your message"), "My son won't sleep{Enter}");
+    await screen.findByText("Bedtime is turning into a battle.");
+    await user.type(screen.getByLabelText("Your message"), "And now?{Enter}");
+    await screen.findByText("Busy");
+    first.unmount();
+
+    const saved = JSON.parse(sessionStorage.getItem(KEY)!);
+    expect(saved.region).toBe("pk");
+    expect(saved.messages.map((m: { role: string }) => m.role)).toEqual(["parent", "coach", "parent"]);
+
+    const fetchMock = respondWith({ body: { reply: planReply } });
+    render(<Chat />);
+    expect(await screen.findByText("Bedtime is turning into a battle.")).toBeInTheDocument();
+    expect(screen.queryByText("Busy")).toBeNull();
+    expect(screen.getByLabelText(/country for helpline/i)).toHaveValue("pk");
+
+    await user.type(screen.getByLabelText("Your message"), "Thanks{Enter}");
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.history.map((t: { role: string }) => t.role)).toEqual(["parent", "coach", "parent"]);
+    expect(body.region).toBe("pk");
+  });
+
+  it("Start over clears the page and the saved copy", async () => {
+    respondWith({ body: { reply: planReply } });
+    const user = userEvent.setup();
+    render(<Chat />);
+    expect(screen.queryByRole("button", { name: "Start over" })).toBeNull();
+    await user.type(screen.getByLabelText("Your message"), "hi{Enter}");
+    await screen.findByText("Bedtime is turning into a battle.");
+    await user.click(screen.getByRole("button", { name: "Start over" }));
+    expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
+    expect(sessionStorage.getItem(KEY)).toBeNull();
+  });
+
+  it("ignores saved data that is corrupt or the wrong shape", () => {
+    sessionStorage.setItem(KEY, "{not json");
+    const a = render(<Chat />);
+    expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
+    a.unmount();
+    sessionStorage.setItem(KEY, JSON.stringify({ messages: "nope" }));
+    const b = render(<Chat />);
+    expect(screen.getByRole("heading", { name: /what's happening/i })).toBeInTheDocument();
+    b.unmount();
+    sessionStorage.setItem(
+      KEY,
+      JSON.stringify({ region: "zz", messages: [{ id: 3, role: "parent", text: "kept" }, { id: 4, role: "coach" }, { id: 5, role: "error", text: "x" }] }),
+    );
+    render(<Chat />);
+    return waitFor(() => {
+      expect(screen.getByText("kept")).toBeInTheDocument();
+      expect(screen.queryByText("x")).toBeNull();
+      expect(screen.getByLabelText(/country for helpline/i)).toHaveValue("ae");
+    });
+  });
+
+  it("still works when storage is blocked", async () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("blocked");
+    });
+    respondWith({ body: { reply: planReply } });
+    const user = userEvent.setup();
+    render(<Chat />);
+    await user.type(screen.getByLabelText("Your message"), "hi{Enter}");
+    expect(await screen.findByText("Bedtime is turning into a battle.")).toBeInTheDocument();
+  });
+
+  it("explains a repeated escalation that comes from earlier in the chat", () => {
+    render(<EscalationCard reply={buildEscalation("self_harm", "en", "in", "history")} />);
+    expect(screen.getByText(/because of something you shared earlier/i)).toBeInTheDocument();
   });
 });
 
