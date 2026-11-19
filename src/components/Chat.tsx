@@ -131,7 +131,7 @@ export default function Chat() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[640px] flex-col px-4 sm:px-6">
-      <header className="flex items-center justify-between gap-3 py-4">
+      <header className="sticky top-0 z-10 -mx-4 flex items-center justify-between gap-3 bg-dusk/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-2.5">
           <NightLight className="size-8" />
           <p className="font-display text-[17px] font-bold tracking-tight whitespace-nowrap">Alpha Kids coach</p>
@@ -215,7 +215,7 @@ export default function Chat() {
             )}
           </ol>
         )}
-        <div ref={bottom} />
+        <div ref={bottom} className="scroll-mb-48" aria-hidden />
       </main>
 
       <div className="sticky bottom-0 -mx-4 bg-dusk/95 px-4 pt-3 pb-4 backdrop-blur sm:-mx-6 sm:px-6">
