@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Home from "@/app/page";
@@ -61,6 +61,18 @@ describe("Chat", () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body).toEqual({ message: "My son won't sleep", history: [], region: "ae" });
     expect(screen.getByLabelText("Your message")).toHaveValue("");
+  });
+
+  it("sends only once when a starter is tapped twice in a row", async () => {
+    const fetchMock = respondWith({ body: { reply: planReply } });
+    render(<Chat />);
+    const first = within(await screen.findByRole("list", { name: /example worries/i })).getAllByRole("button")[0];
+    act(() => {
+      first.click();
+      first.click();
+    });
+    expect(await screen.findByText("Bedtime is turning into a battle.")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it("sends earlier turns as history, and the chosen helpline country", async () => {

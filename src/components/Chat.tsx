@@ -73,6 +73,8 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [region, setRegion] = useState<Region>("ae");
   const nextId = useRef(1);
+  // State updates are async, so a double tap could send twice before `sending` flips.
+  const inFlight = useRef(false);
   const bottom = useRef<HTMLDivElement>(null);
   // false until we've read browser storage. Saving waits for it, otherwise the
   // first render's empty list would overwrite the saved conversation.
@@ -100,7 +102,8 @@ export default function Chat() {
 
   async function send(text: string) {
     const message = text.trim();
-    if (!message || sending) return;
+    if (!message || inFlight.current) return;
+    inFlight.current = true;
 
     const history = messages.map(toTurn).filter((t): t is ChatTurn => t !== null);
     setMessages((prev) => [...prev, { id: nextId.current++, role: "parent", text: message }]);
@@ -119,6 +122,7 @@ export default function Chat() {
       const text = err instanceof Error ? err.message : "Something went wrong. Please try again.";
       setMessages((prev) => [...prev, { id: nextId.current++, role: "error", text }]);
     } finally {
+      inFlight.current = false;
       setSending(false);
     }
   }
